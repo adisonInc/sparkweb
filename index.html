@@ -445,11 +445,12 @@
     // Periodic status ping every 10 minutes
     function formatStatusString() {
       const now = new Date();
-      const time = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-      const season = getSeason(now);
-      const daynight = dayNightEl.textContent || '';
-      const days = daysSinceEl.textContent || '';
-      return `DAYNIGHT:${daynight};DAYS:${days};SEASON:${season};TIME:${time}`;
+      const seasonPl = getSeason(now).toLowerCase(); // wiosna|lato|jesień|zima
+      const daynightUi = (dayNightEl.textContent || '').toLowerCase(); // dzień|noc
+      const daynight = daynightUi === 'dzień' ? 'DAY' : 'NIGHT';
+      const days = daysSinceEl.textContent || '0';
+      // Final format: DAY|NIGHT;wiosna|lato|jesień|zima;RAZEM:<number>
+      return `${daynight};${seasonPl};RAZEM:${days}`;
     }
     async function sendStatus() {
       const payload = formatStatusString();

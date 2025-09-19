@@ -1,26 +1,26 @@
-Reserved command strings sent to /api/command
+EXACT strings sent to /api/command (as JSON {"cmd":"<STRING>"})
 
 1) SPARK button
-   - Immediately: ON
-   - After 1000 ms: OFF
+   - "ON"
+   - "OFF"   (sent 1000 ms after ON)
 
-2) Periodic status (every 10 minutes)
-   - Exact format (single line):
-     DAYNIGHT:<Dzień|Noc>;DAYS:<number>;SEASON:<Wiosna|Lato|Jesień|Zima>;TIME:<HH:MM>
-   - Example:
-     DAYNIGHT:Dzień;DAYS:12;SEASON:Jesień;TIME:14:37
+2) Periodic status (once on load, then every 10 minutes)
+   - Pattern:
+     "DAY|NIGHT;wiosna|lato|jesień|zima;RAZEM:<number>"
+   - Examples:
+     "DAY;jesień;RAZEM:12"
+     "NIGHT;zima;RAZEM:128"
 
 3) Morse transmitter (Nadaj)
-   - Sends only ON/OFF pulses in time, no text strings.
-   - Durations:
-     • Dot (.)  -> ON 500 ms, then OFF (gap)
-     • Dash (-) -> ON 1000 ms, then OFF (gap)
-   - Gaps (OFF durations):
-     • Between elements of a letter: 500 ms
-     • Between letters: 1000 ms
-     • Between words: 1500 ms
+   - Sends ONLY these literal strings repeatedly during transmission:
+     "ON"
+     "OFF"
+   - No other text values are used for Morse.
 
-Notes
-- No other literal strings are sent by the UI.
-- If you need a distinct prefix for status, propose one and we can update the format.
+Timing reference for Morse (for the receiver):
+   - Dot (.)   -> ON 500 ms, then OFF (gap)
+   - Dash (-)  -> ON 1000 ms, then OFF (gap)
+   - Gaps (OFF): 500 ms between elements, 1000 ms between letters, 1500 ms between words
+
+No other literal strings are sent by the UI.
 
