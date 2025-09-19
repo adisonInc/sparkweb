@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🎮 Parallax Control</title>
+  <link rel="manifest" href="/manifest.json">
+  <style>
+    body {
+      background-color: #121212;
+      color: white;
+      font-family: Arial, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      margin: 0;
+    }
+    h1 { font-size: 24px; margin-bottom: 20px; }
+    button {
+      background: #1e1e1e;
+      color: white;
+      border: 1px solid #333;
+      border-radius: 12px;
+      padding: 12px 20px;
+      margin: 5px;
+      font-size: 18px;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+    button:hover {
+      background: #333;
+      transform: scale(1.05);
+    }
+    #history {
+      max-width: 90%;
+      margin-top: 20px;
+      font-size: 14px;
+      background: #1e1e1e;
+      padding: 10px;
+      border-radius: 8px;
+      max-height: 150px;
+      overflow-y: auto;
+      width: 300px;
+    }
+  </style>
+</head>
+<body>
+  <h1>🎮 Parallax Control</h1>
+  <div>
+    <button onclick="sendCmd('start')">Start</button>
+    <button onclick="sendCmd('left')">Left</button>
+    <button onclick="sendCmd('right')">Right</button>
+    <button onclick="sendCmd('stop')">Stop</button>
+  </div>
+  <div>
+    <button onclick="sendCmd('vibrate')">Vibrate</button>
+    <button onclick="sendCmd('led_on')">LED ON</button>
+    <button onclick="sendCmd('led_off')">LED OFF</button>
+  </div>
+  <div id="history"><b>Historia komend:</b><br></div>
+
+  <script>
+    const API_URL = "/api/command";
+    const historyBox = document.getElementById("history");
+
+    async function sendCmd(cmd) {
+      await fetch(API_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ cmd })
+      });
+      addToHistory(cmd);
+    }
+
+    function addToHistory(cmd) {
+      const now = new Date().toLocaleTimeString();
+      const p = document.createElement("p");
+      p.textContent = `[${now}] ${cmd}`;
+      historyBox.appendChild(p);
+      historyBox.scrollTop = historyBox.scrollHeight;
+    }
+  </script>
+</body>
+</html>
