@@ -12,15 +12,12 @@ EXACT strings sent to /api/command (as JSON {"cmd":"<STRING>"})
      "NIGHT;zima;RAZEM:128"
 
 3) Morse transmitter (Nadaj)
-   - Sends ONLY these literal strings repeatedly during transmission:
-     "ON"
-     "OFF"
-   - No other text values are used for Morse.
-
-Timing reference for Morse (for the receiver):
-   - Dot (.)   -> ON 500 ms, then OFF (gap)
-   - Dash (-)  -> ON 1000 ms, then OFF (gap)
-   - Gaps (OFF): 500 ms between elements, 1000 ms between letters, 1500 ms between words
+   - Sends a single STRING with encoded Morse (dot/dash and slashes):
+     Example: ".... . .-.. .- / -- .. .-.. --- ... -.-."
+   - Encoding rules:
+     • Letters separated by single space
+     • Words separated by " / " (spacja, slash, spacja)
+     • Alphabet: standard ITU (A‑Z, 0‑9)
 
 No other literal strings are sent by the UI.
 

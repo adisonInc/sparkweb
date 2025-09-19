@@ -408,38 +408,16 @@
     morseInput.addEventListener('input', updateEncoded);
     updateEncoded();
 
-    // Transmit Morse via ON/OFF pulses
-    function wait(ms){ return new Promise(r => setTimeout(r, ms)); }
+    // Send Morse as a STRING. ESP interprets and handles timing.
     async function sendCmd(cmd) {
       try {
         await fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ cmd }) });
       } catch (_) {}
     }
-    // Timing: dot=500ms, dash=1000ms, gap between elements=500ms, between letters=1000ms, between words=1500ms
-    async function transmitMorse(encoded) {
-      const tokens = encoded.split(' ');
-      for (let i = 0; i < tokens.length; i++) {
-        const t = tokens[i];
-        if (t === '/') { // word gap
-          await wait(1500);
-          continue;
-        }
-        // letters: sequence of dots/dashes
-        for (let j = 0; j < t.length; j++) {
-          const symbol = t[j];
-          const duration = symbol === '-' ? 1000 : 500;
-          await sendCmd('ON');
-          await wait(duration);
-          await sendCmd('OFF');
-          if (j < t.length - 1) await wait(500); // between elements
-        }
-        if (i < tokens.length - 1 && tokens[i+1] !== '/') await wait(1000); // between letters
-      }
-    }
     morseSendBtn.addEventListener('click', async () => {
       const encoded = encodeToMorse(morseInput.value || '');
       if (!encoded) return;
-      await transmitMorse(encoded);
+      await sendCmd(encoded);
     });
 
     // Periodic status ping every 10 minutes
