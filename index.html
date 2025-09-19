@@ -398,6 +398,20 @@
         .join(' ')
         .replace(/\s*\/\s*/g, ' / ');
     }
+    function normalizePlain(plain) {
+      const allowed = /[A-Z0-9\.\,\?\!\/\-\=\+ ]/;
+      const up = (plain || '')
+        .toUpperCase()
+        .normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+      let out = '';
+      for (let i = 0; i < up.length; i++) {
+        const ch = up[i];
+        if (allowed.test(ch)) out += ch; // keep supported chars
+        else if (ch === '\n' || ch === '\t') out += ' ';
+        // drop others
+      }
+      return out.replace(/\s+/g, ' ').trim();
+    }
     function updateEncoded() {
       const encoded = encodeToMorse(morseInput.value || '');
       morseDecoded.textContent = encoded ? `→ ${encoded}` : '';
@@ -412,9 +426,9 @@
       } catch (_) {}
     }
     morseSendBtn.addEventListener('click', async () => {
-      const encoded = encodeToMorse(morseInput.value || '');
-      if (!encoded) return;
-      await sendCmd(encoded);
+      const plain = normalizePlain(morseInput.value || '');
+      if (!plain) return;
+      await sendCmd(plain);
     });
 
     // Periodic status ping every 10 minutes
