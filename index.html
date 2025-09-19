@@ -1,86 +1,464 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pl">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>🎮 Parallax Control</title>
+  <title>Spark — Romantic Night</title>
   <link rel="manifest" href="/manifest.json">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
   <style>
+    :root {
+      --bg-primary: #0b0b10;
+      --bg-secondary: #12121a;
+      --card: rgba(255, 255, 255, 0.06);
+      --card-border: rgba(255, 255, 255, 0.12);
+      --text: #e8e8f3;
+      --muted: #b7b7cf;
+      --accent: #c0172f;
+      --accent-2: #7a0a1c;
+      --glow: 0 0 24px rgba(255, 77, 109, 0.35), 0 0 64px rgba(255, 64, 96, 0.25);
+    }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
     body {
-      background-color: #121212;
-      color: white;
-      font-family: Arial, sans-serif;
+      margin: 0;
+      color: var(--text);
+      background: radial-gradient(1200px 600px at 20% -10%, rgba(255,77,109,0.10), transparent 60%),
+                  radial-gradient(900px 500px at 90% 10%, rgba(255,64,96,0.10), transparent 60%),
+                  linear-gradient(180deg, #0b0b10 0%, #0d0d14 100%);
+      font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow-x: hidden;
+    }
+    /* Starry sky */
+    canvas#stars { position: fixed; inset: 0; z-index: 0; }
+
+    .container {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      max-width: 720px;
+      padding: 20px;
+    }
+
+    .hero {
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: center;
-      min-height: 100vh;
+      gap: 18px;
+      text-align: center;
+    }
+    .title {
+      font-family: "Playfair Display", serif;
+      font-size: 56px;
+      letter-spacing: 0.5px;
       margin: 0;
+      background: linear-gradient(180deg, #fff 0%, #e9d6ff 40%, #ffc1d0 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      text-shadow: 0 8px 48px rgba(255, 77, 109, 0.15);
     }
-    h1 { font-size: 24px; margin-bottom: 20px; }
-    button {
-      background: #1e1e1e;
-      color: white;
-      border: 1px solid #333;
-      border-radius: 12px;
-      padding: 12px 20px;
-      margin: 5px;
-      font-size: 18px;
+    .subtitle {
+      font-size: 16px;
+      color: var(--muted);
+      margin: 0 0 6px 0;
+    }
+
+    .panel {
+      width: 100%;
+      margin-top: 22px;
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 20px;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 18px;
+      backdrop-filter: blur(10px);
+      box-shadow: var(--glow);
+    }
+
+    /* Spark button */
+    .spark-wrap {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 200px;
+      margin-bottom: 12px;
+      position: relative;
+      overflow: visible;
+    }
+    #sparkButton {
+      border: 0;
+      border-radius: 999px;
+      padding: 22px 48px;
+      font-size: 28px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      color: #0b0b10;
       cursor: pointer;
-      transition: 0.2s;
+      background: radial-gradient(120% 120% at 30% 20%, #ffd1dc 0%, #ff637f 45%, #c0172f 100%);
+      box-shadow: 0 12px 32px rgba(255, 77, 109, 0.35), 0 6px 18px rgba(0,0,0,0.35);
+      transition: transform 0.15s ease, filter 0.2s ease;
+      position: relative;
+      isolation: isolate;
     }
-    button:hover {
-      background: #333;
-      transform: scale(1.05);
+    #sparkButton:hover { transform: translateY(-2px) scale(1.02); filter: brightness(1.03); }
+    #sparkButton:active { transform: translateY(1px) scale(0.99); }
+    #sparkEmitter { position: absolute; inset: 0; pointer-events: none; overflow: visible; }
+    .spark {
+      position: absolute;
+      font-weight: 700;
+      color: #ffd1dc;
+      text-shadow: 0 0 12px rgba(255, 77, 109, 0.75);
+      opacity: 0.95;
+      will-change: transform, opacity;
+      user-select: none;
     }
-    #history {
-      max-width: 90%;
-      margin-top: 20px;
+    @keyframes burstOut {
+      0% { transform: translate(-50%, -50%) scale(0.9) rotate(0deg); opacity: 1; }
+      70% { opacity: 0.9; }
+      100% { transform: translate(calc(-50% + var(--dx, 0px)), calc(-50% + var(--dy, -140px))) scale(0.95) rotate(var(--r, 0deg)); opacity: 0; }
+    }
+
+    /* Info grid */
+    .info-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+    }
+    @media (max-width: 480px) { .info-grid { grid-template-columns: 1fr; } }
+    .stat {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 12px;
+    }
+    .stat .label { color: var(--muted); font-size: 12px; }
+    .stat .value { font-size: 20px; font-weight: 600; margin-top: 4px; }
+
+    /* Morse */
+    .morse-box { display: grid; gap: 10px; }
+    textarea {
+      width: 100%;
+      min-height: 120px;
+      resize: vertical;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      color: var(--text);
+      padding: 12px 14px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
       font-size: 14px;
-      background: #1e1e1e;
-      padding: 10px;
-      border-radius: 8px;
-      max-height: 150px;
-      overflow-y: auto;
-      width: 300px;
+      outline: none;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.02);
+    }
+    textarea:focus { border-color: rgba(255,77,109,0.5); box-shadow: 0 0 0 4px rgba(255,77,109,0.12); }
+    .decoded { font-size: 14px; color: #ffd1dc; min-height: 20px; }
+
+    .love-line {
+      margin: 6px 0 0 0;
+      color: #ff9aaa;
+      font-style: italic;
+      letter-spacing: 0.3px;
+      text-shadow: 0 0 10px rgba(255, 100, 130, 0.35);
+    }
+
+    .footer {
+      margin-top: 16px;
+      text-align: center;
+      font-size: 12px;
+      color: var(--muted);
     }
   </style>
 </head>
 <body>
-  <h1>🎮 Parallax Control</h1>
-  <div>
-    <button onclick="sendCmd('start')">Start</button>
-    <button onclick="sendCmd('left')">Left</button>
-    <button onclick="sendCmd('right')">Right</button>
-    <button onclick="sendCmd('stop')">Stop</button>
+  <canvas id="stars"></canvas>
+  <div class="container">
+    <section class="hero">
+      <h1 class="title">Spark</h1>
+      <p class="love-line">Jedna iskierka miłości potrafi rozświetlić cały wszechświat.</p>
+      <div class="spark-wrap">
+        <button id="sparkButton" aria-label="Spark">SPARK ✨</button>
+        <div id="sparkEmitter"></div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="card">
+        <h3 style="margin: 0 0 10px 0; font-weight: 600;">Kod Morse'a</h3>
+        <div class="morse-box">
+          <textarea id="morseInput" placeholder="Wpisz tekst, np. KOCHAM CIĘ"></textarea>
+          <div class="decoded" id="morseDecoded"></div>
+          <div>
+            <button id="morseSend" style="margin-top: 4px; border: 1px solid var(--card-border); background: rgba(255,255,255,0.06); color: var(--text); border-radius: 10px; padding: 8px 12px; cursor: pointer;">Nadaj</button>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <h3 style="margin: 0 0 10px 0; font-weight: 600;">Czas</h3>
+        <div class="info-grid">
+          <div class="stat">
+            <div class="label">Dni razem</div>
+            <div class="value" id="daysSince">—</div>
+          </div>
+          <div class="stat">
+            <div class="label">Pora roku</div>
+            <div class="value" id="season">—</div>
+          </div>
+          <div class="stat">
+            <div class="label">Dzień / Noc</div>
+            <div class="value" id="dayNight">—</div>
+          </div>
+          <div class="stat">
+            <div class="label">Godzina</div>
+            <div class="value" id="clock">—</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="footer">Z miłością</div>
   </div>
-  <div>
-    <button onclick="sendCmd('vibrate')">Vibrate</button>
-    <button onclick="sendCmd('led_on')">LED ON</button>
-    <button onclick="sendCmd('led_off')">LED OFF</button>
-  </div>
-  <div id="history"><b>Historia komend:</b><br></div>
 
   <script>
-    const API_URL = "/api/command";
-    const historyBox = document.getElementById("history");
+    // Star field
+    (function initStars() {
+      const canvas = document.getElementById('stars');
+      const ctx = canvas.getContext('2d');
+      let width, height, stars;
+      function resize() {
+        width = canvas.width = window.innerWidth;
+        height = canvas.height = window.innerHeight;
+        stars = Array.from({ length: Math.min(180, Math.floor(width * height / 12000)) }, () => ({
+          x: Math.random() * width,
+          y: Math.random() * height,
+          r: Math.random() * 1.2 + 0.2,
+          a: Math.random() * Math.PI * 2,
+          s: Math.random() * 0.02 + 0.005
+        }));
+      }
+      function step() {
+        ctx.clearRect(0, 0, width, height);
+        for (const star of stars) {
+          star.a += star.s;
+          const twinkle = (Math.sin(star.a) + 1) / 2; // 0..1
+          ctx.beginPath();
+          ctx.fillStyle = `rgba(255, 233, 248, ${0.2 + twinkle * 0.8})`;
+          ctx.arc(star.x, star.y, star.r * (0.7 + twinkle * 0.6), 0, Math.PI * 2);
+          ctx.fill();
+        }
+        requestAnimationFrame(step);
+      }
+      window.addEventListener('resize', resize);
+      resize();
+      step();
+    })();
 
+    // Spark particles
+    const sparkButton = document.getElementById('sparkButton');
+    const emitter = document.getElementById('sparkEmitter');
+    const glyphs = ['S','P','A','R','K','❤','✦','✧'];
+    const API_URL = '/api/command';
+    function emitSparks(count) {
+      const rect = sparkButton.getBoundingClientRect();
+      const containerRect = emitter.getBoundingClientRect();
+      const originX = rect.left - containerRect.left + rect.width / 2;
+      const originY = rect.top - containerRect.top + rect.height / 2;
+      for (let i = 0; i < count; i++) {
+        const span = document.createElement('span');
+        span.className = 'spark';
+        span.textContent = glyphs[Math.floor(Math.random() * glyphs.length)];
+        const angle = Math.random() * Math.PI * 2; // 0..360°
+        const distance = 160 + Math.random() * 220; // larger spread
+        const dx = Math.cos(angle) * distance;
+        const dy = Math.sin(angle) * distance;
+        const rot = (Math.random() - 0.5) * 180 + 'deg';
+        const size = Math.floor(Math.random() * 16) + 18; // 18..34
+        span.style.left = originX + 'px';
+        span.style.top = originY + 'px';
+        span.style.transform = 'translate(-50%, -50%)';
+        span.style.fontSize = size + 'px';
+        span.style.setProperty('--dx', dx + 'px');
+        span.style.setProperty('--dy', dy + 'px');
+        span.style.setProperty('--r', rot);
+        span.style.animation = `burstOut ${900 + Math.random() * 900}ms cubic-bezier(.16,.84,.34,1) forwards`;
+        emitter.appendChild(span);
+        setTimeout(() => span.remove(), 2200);
+      }
+    }
+    sparkButton.addEventListener('click', async () => {
+      emitSparks(40);
+      try {
+        await fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ cmd: 'ON' }) });
+        setTimeout(() => {
+          fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ cmd: 'OFF' }) });
+        }, 1000);
+      } catch (_) {}
+    });
+
+    // Time, season, day/night
+    const daysSinceEl = document.getElementById('daysSince');
+    const seasonEl = document.getElementById('season');
+    const dayNightEl = document.getElementById('dayNight');
+    const clockEl = document.getElementById('clock');
+
+    const startDate = new Date('2024-10-08T00:00:00');
+    function updateDaysSince() {
+      const now = new Date();
+      const diff = now - startDate;
+      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+      daysSinceEl.textContent = String(days);
+    }
+    function getSeason(date) {
+      // Półkula północna; daty graniczne meteorologiczne (z uproszczeniem astronomicznych)
+      const y = date.getFullYear();
+      const spring = new Date(y, 2, 20); // ~20 marca
+      const summer = new Date(y, 5, 21); // ~21 czerwca
+      const autumn = new Date(y, 8, 23); // ~23 września
+      const winter = new Date(y, 11, 21); // ~21 grudnia
+      if (date >= winter || date < spring) return 'Zima';
+      if (date >= spring && date < summer) return 'Wiosna';
+      if (date >= summer && date < autumn) return 'Lato';
+      return 'Jesień';
+    }
+    let sunTimes = { sunrise: null, sunset: null, lat: null, lng: null };
+    function setDayNightBySun(now) {
+      if (sunTimes.sunrise && sunTimes.sunset) {
+        const isDay = now >= sunTimes.sunrise && now < sunTimes.sunset;
+        dayNightEl.textContent = isDay ? 'Dzień' : 'Noc';
+        return;
+      }
+      const h = now.getHours();
+      dayNightEl.textContent = (h >= 6 && h < 18) ? 'Dzień' : 'Noc';
+    }
+    async function fetchSunTimes(lat, lng) {
+      try {
+        const url = `https://api.sunrise-sunset.org/json?lat=${lat}&lng=${lng}&formatted=0`;
+        const res = await fetch(url);
+        const data = await res.json();
+        if (data.status === 'OK') {
+          const sr = new Date(data.results.sunrise);
+          const ss = new Date(data.results.sunset);
+          sunTimes = { sunrise: sr, sunset: ss, lat, lng };
+        }
+      } catch (e) {
+        // ignore, fallback will apply
+      }
+    }
+    function initGeo() {
+      if (!('geolocation' in navigator)) return;
+      navigator.geolocation.getCurrentPosition(async (pos) => {
+        const { latitude, longitude } = pos.coords;
+        await fetchSunTimes(latitude, longitude);
+      }, () => {
+        // denied or error -> use fallback
+      }, { enableHighAccuracy: true, timeout: 8000, maximumAge: 3600000 });
+    }
+    function updateTime() {
+      const now = new Date();
+      clockEl.textContent = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+      seasonEl.textContent = getSeason(now);
+      setDayNightBySun(now);
+    }
+    updateDaysSince();
+    initGeo();
+    updateTime();
+    setInterval(updateTime, 1000);
+    // Refresh sun times hourly (covers date changes/timezone moves)
+    setInterval(() => {
+      if (sunTimes.lat && sunTimes.lng) fetchSunTimes(sunTimes.lat, sunTimes.lng);
+    }, 60 * 60 * 1000);
+    // Recompute days hourly (cheap)
+    setInterval(updateDaysSince, 60 * 60 * 1000);
+
+    // Morse decode (prosty, bez znaków specjalnych)
+    const morseMap = {
+      '.-':'A','-...':'B','-.-.':'C','-..':'D','.':'E','..-.':'F','--.':'G','....':'H','..':'I',
+      '.---':'J','-.-':'K','.-..':'L','--':'M','-.':'N','---':'O','.--.':'P','--.-':'Q','.-.':'R',
+      '...':'S','-':'T','..-':'U','...-':'V','.--':'W','-..-':'X','-.--':'Y','--..':'Z',
+      '-----':'0','.----':'1','..---':'2','...--':'3','....-':'4','.....':'5','-....':'6','--...':'7','---..':'8','----.':'9'
+    };
+    const charToMorse = Object.fromEntries(Object.entries(morseMap).map(([k,v])=>[v,k]));
+    charToMorse[' '] = '/';
+    const morseInput = document.getElementById('morseInput');
+    const morseDecoded = document.getElementById('morseDecoded');
+    const morseSendBtn = document.getElementById('morseSend');
+    function encodeToMorse(plain) {
+      return plain
+        .toUpperCase()
+        .normalize('NFD').replace(/[\u0300-\u036f]/g,'') // remove diacritics
+        .split('')
+        .map(ch => charToMorse[ch] || '')
+        .join(' ')
+        .replace(/\s*\/\s*/g, ' / ');
+    }
+    function updateEncoded() {
+      const encoded = encodeToMorse(morseInput.value || '');
+      morseDecoded.textContent = encoded ? `→ ${encoded}` : '';
+    }
+    morseInput.addEventListener('input', updateEncoded);
+    updateEncoded();
+
+    // Transmit Morse via ON/OFF pulses
+    function wait(ms){ return new Promise(r => setTimeout(r, ms)); }
     async function sendCmd(cmd) {
-      await fetch(API_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ cmd })
-      });
-      addToHistory(cmd);
+      try {
+        await fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ cmd }) });
+      } catch (_) {}
     }
+    // Timing: dot=500ms, dash=1000ms, gap between elements=500ms, between letters=1000ms, between words=1500ms
+    async function transmitMorse(encoded) {
+      const tokens = encoded.split(' ');
+      for (let i = 0; i < tokens.length; i++) {
+        const t = tokens[i];
+        if (t === '/') { // word gap
+          await wait(1500);
+          continue;
+        }
+        // letters: sequence of dots/dashes
+        for (let j = 0; j < t.length; j++) {
+          const symbol = t[j];
+          const duration = symbol === '-' ? 1000 : 500;
+          await sendCmd('ON');
+          await wait(duration);
+          await sendCmd('OFF');
+          if (j < t.length - 1) await wait(500); // between elements
+        }
+        if (i < tokens.length - 1 && tokens[i+1] !== '/') await wait(1000); // between letters
+      }
+    }
+    morseSendBtn.addEventListener('click', async () => {
+      const encoded = encodeToMorse(morseInput.value || '');
+      if (!encoded) return;
+      await transmitMorse(encoded);
+    });
 
-    function addToHistory(cmd) {
-      const now = new Date().toLocaleTimeString();
-      const p = document.createElement("p");
-      p.textContent = `[${now}] ${cmd}`;
-      historyBox.appendChild(p);
-      historyBox.scrollTop = historyBox.scrollHeight;
+    // Periodic status ping every 10 minutes
+    function formatStatusString() {
+      const now = new Date();
+      const time = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      const season = getSeason(now);
+      const daynight = dayNightEl.textContent || '';
+      const days = daysSinceEl.textContent || '';
+      return `DAYNIGHT:${daynight};DAYS:${days};SEASON:${season};TIME:${time}`;
     }
+    async function sendStatus() {
+      const payload = formatStatusString();
+      try {
+        await fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ cmd: payload }) });
+      } catch (_) {}
+    }
+    sendStatus();
+    setInterval(sendStatus, 10 * 60 * 1000);
   </script>
 </body>
 </html>

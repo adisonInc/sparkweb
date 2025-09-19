@@ -1,0 +1,26 @@
+Reserved command strings sent to /api/command
+
+1) SPARK button
+   - Immediately: ON
+   - After 1000 ms: OFF
+
+2) Periodic status (every 10 minutes)
+   - Exact format (single line):
+     DAYNIGHT:<Dzień|Noc>;DAYS:<number>;SEASON:<Wiosna|Lato|Jesień|Zima>;TIME:<HH:MM>
+   - Example:
+     DAYNIGHT:Dzień;DAYS:12;SEASON:Jesień;TIME:14:37
+
+3) Morse transmitter (Nadaj)
+   - Sends only ON/OFF pulses in time, no text strings.
+   - Durations:
+     • Dot (.)  -> ON 500 ms, then OFF (gap)
+     • Dash (-) -> ON 1000 ms, then OFF (gap)
+   - Gaps (OFF durations):
+     • Between elements of a letter: 500 ms
+     • Between letters: 1000 ms
+     • Between words: 1500 ms
+
+Notes
+- No other literal strings are sent by the UI.
+- If you need a distinct prefix for status, propose one and we can update the format.
+
