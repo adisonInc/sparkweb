@@ -1,8 +1,7 @@
 EXACT strings sent to /api/command (as JSON {"cmd":"<STRING>"})
 
 1) SPARK button
-   - "ON"
-   - "OFF"   (sent 1000 ms after ON)
+   - "spark"
 
 2) Periodic status (once on load, then every 10 minutes)
    - Pattern:

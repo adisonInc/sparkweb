@@ -298,10 +298,7 @@
     sparkButton.addEventListener('click', async () => {
       emitSparks(40);
       try {
-        await fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ cmd: 'ON' }) });
-        setTimeout(() => {
-          fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ cmd: 'OFF' }) });
-        }, 1000);
+        await fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ cmd: 'spark' }) });
       } catch (_) {}
     });
 
