@@ -436,7 +436,7 @@
     // Periodic status ping every 10 minutes
     function formatStatusString() {
       const now = new Date();
-      const seasonPl = getSeason(now).toLowerCase(); // wiosna|lato|jesień|zima
+      const seasonPl = getSeason(now) // wiosna|lato|jesień|zima
       const daynightUi = (dayNightEl.textContent || '').toLowerCase(); // dzień|noc
       const daynight = daynightUi === 'dzień' ? 'DAY' : 'NIGHT';
       const days = daysSinceEl.textContent || '0';
